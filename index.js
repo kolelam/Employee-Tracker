@@ -180,3 +180,121 @@ const viewAllRoles = function(){
         prompt();
     });
 }
+const addRole = function(){
+    const sqlQuery = `SELECT * FROM department`;
+    let params = [];
+    db.query(sqlQuery, params, (err, result) => {
+        if (err) {
+            console.log(err);
+            return err;
+        }
+        const deptNames = [];
+        const deptObj = {};
+        result.forEach((department) => {
+            deptNames.push(department.name);
+            deptObj[department.name] = department.id
+        });
+        inquirer.prompt([
+            {
+                message: 'What is the name of the role?',
+                name: 'name',
+            },
+            {
+                message: 'What is the salary of the role?',
+                name: 'salary',
+            },
+            {
+                type: 'list',
+                message: 'Which department does the role belong to?',
+                name: 'department',
+                choices: deptNames
+            },
+        ]).then((data) => {
+            const sqlQuery = `INSERT INTO role(title,salary,department_id) VALUES(?,?,?)`;
+            let params = [data.name, data.salary, deptObj[data.department]];
+            db.query(sqlQuery, params, (err, result) => {
+                if (err) {
+                    console.log(err);
+                    return err;
+                }
+                console.log('\n');
+                console.log(`Added ${data.name} to the database`);
+                console.log('\n');
+                prompt();
+            });
+        });
+    });
+}
+const viewAllDepartments = function(){
+    const sqlQuery = `SELECT * FROM department`;
+    let params = [];
+    db.query(sqlQuery, params, (err, result) => {
+        if (err) {
+            console.log(err);
+            return err;
+        }
+        console.log('\n');
+        console.table(result);
+        console.log('\n');
+        prompt();
+    });
+}
+const addDepartment = function(){
+    inquirer.prompt([
+        {
+            message: 'What is the name of the department?',
+            name: 'name',
+        }
+    ]).then((data) => {
+        const sqlQuery = `INSERT INTO department(name) VALUES(?)`;
+        let params = [data.name];
+        db.query(sqlQuery, params, (err, result) => {
+            if (err) {
+                console.log(err);
+                return err;
+            }
+            console.log('\n');
+            console.log(`Added ${data.name} to the database`);
+            console.log('\n');
+            prompt();
+        });
+    });
+}
+
+
+const resolveAnswer = function(input){
+    switch(input){
+        case 'View All Employees':
+            viewAllEmployees();
+            break;
+        case 'Add Employee':
+            addEmployee();
+            break;
+        case 'Update Employee Role':
+            updateEmployeeRole();
+            break;
+        case 'View All Roles':
+            viewAllRoles();
+            break;
+        case 'Add Role':
+            addRole();
+            break;
+        case 'View All Departments':
+            viewAllDepartments();
+            break;
+        case 'Add Department':
+            addDepartment();
+            break;
+        case 'Quit':
+            console.log('Bye');
+            db.end();
+            return;
+    }
+}
+
+const prompt = function(){
+    inquirer.prompt(promptQuestions).then((data) => {
+        resolveAnswer(data.answer);
+    });
+}
+prompt();
